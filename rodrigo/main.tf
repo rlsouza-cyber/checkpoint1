@@ -41,23 +41,18 @@ resource "aws_subnet" "Work_Public_Subnet" {
 }
 # DEFINE ROUTE TABLE
 resource "aws_route_table" "work_public_route_table_local" {
-  vpc_id = aws_vpc.Work_VPC.id
+  count = var.use_aws
+  vpc_id = aws_vpc.Work_VPC
   route {
-    cidr_block = "10.0.0.0/16"
-    gateway_id = aws_internet_gateway.Work_IGW.id
-  }
-  tags = {
-    Name = "Public RT"
-  }
-}
-resource "aws_route_table" "Work_IGW" {
-  vpc_id = aws_vpc.Work_VPC.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.Work_IGW.id
-  }
-  tags = {
-    Name = "Work RT"
+    cidr_block                = "0.0.0.0/0"
+    egress_only_gateway_id    = ""
+    gateway_id                = aws_internet_gateway.Work_IGW
+    instance_id               = ""
+    #ipv6_cidr_block           = ""
+    nat_gateway_id            = ""
+    network_interface_id      = ""
+    transit_gateway_id        = ""
+    vpc_peering_connection_id = ""
   }
 }
 # SECURITY GROUP PARA INSTANCIA
@@ -70,26 +65,38 @@ resource "aws_security_group" "Work_Nagios_Security_Group" {
     from_port = 0
     to_port = 0
     protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["10.0.0.0/16"]
   }
     ingress {
       from_port       = "0"
       to_port         = "0"
       protocol        = "-1"
-      cidr_blocks = [ "0.0.0.0/0" ]
+      cidr_blocks = [ "10.0.0.0/16" ]
   }
+  ingress {
+    from_port = 0
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port = 0
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+}
 }
 # provisioner
 resource "aws_instance" "Nagios" {
     ami = "ami-042e8287309f5df03"
     instance_type = "t2.micro"
     subnet_id = aws_subnet.Work_Public_Subnet.id
-    key_name = "vockey"   
+    key_name = "vockey2021"   
 }
 # provisioner
 resource "aws_instance" "node_a" {
     ami = "ami-042e8287309f5df03"
     instance_type = "t2.micro"
     subnet_id = aws_subnet.Work_Public_Subnet.id
-    key_name = "vockey"
+    key_name = "vockey2021"
 }
